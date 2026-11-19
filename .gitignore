@@ -1,0 +1,23 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Node and frontend build output
+node_modules/
+dist/
+.vite/
+
+# Local data and generated files
+*.csv
+*.xls
+*.xlsx
+*.log
+.DS_Store
