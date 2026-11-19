@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sheetwise Student Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"></head><body>
+<button id="menu" aria-label="Toggle menu">Menu</button><div id="bar"><div></div></div>
+<nav aria-label="Guide sections"><div class="brand"><div class="logo">&#9638;</div><div>Sheetwise<small>Student guide</small></div></div>
+<a class="gh" href="https://github.com/Bhawni-jha/excel-copilot-with-python" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>View on GitHub</a>
+<div class="repo">Bhawni-jha / excel-copilot-with-python</div>
+<input id="find" type="search" placeholder="Search topics" aria-label="Search topics">
+<div class="links"><a href="#overview">1. Project overview</a><a href="#stack">2. Tech stack</a><a href="#flow">3. How it works</a><a href="#structure">4. Project structure</a><a href="#backend">5. Backend code</a><a href="#api">6. API reference</a><a href="#frontend">7. Frontend code</a><a href="#setup">8. Run it locally</a><a href="#security">9. Security</a><a href="#deploy">10. Deployment</a><a href="#trouble">11. Troubleshooting</a><a href="#practice">12. Practice and viva</a></div></nav>
+<main>
+<header class="hero"><div><h1>Sheetwise: ask your spreadsheet anything</h1><p>Upload an Excel or CSV file, ask a question in plain English, and get a table, chart and the Python code behind the answer.</p><div class="pills"><span>React</span><span>FastAPI</span><span>Pandas</span><span>OpenAI</span></div></div>
+<div class="term" aria-hidden="true"><div class="dots"><i></i><i></i><i></i></div><pre id="typed"></pre></div></header>
+<div class="stats"><div class="stat"><b data-n="3">0</b><span>API endpoints</span></div><div class="stat"><b data-n="12">0</b><span>guide sections</span></div><div class="stat"><b data-n="10">0</b><span>seconds timeout</span></div><div class="stat"><b data-n="10000">0</b><span>max rows</span></div></div>
+
+<section id="overview"><h2><em>1</em>Project overview</h2>
+<p>Sheetwise reads a spreadsheet into a pandas DataFrame. It sends only the column names and types, plus your question, to a language model. The model writes pandas code, the server runs it, and the browser shows the result.</p>
+<h3>Features</h3><ul><li>Upload <code>.xlsx</code>, <code>.xls</code> and <code>.csv</code> files by drag and drop.</li><li>Suggested questions built from your file's own columns and values.</li><li>Totals, averages, rankings, grouping and text filters.</li><li>Result table, bar chart and a "show generated code" toggle.</li><li>Offline demo mode with <code>MOCK_LLM=1</code>, so you can learn without an API key.</li></ul>
+<div class="note"><b>What you will learn:</b> REST APIs, file upload, prompting an LLM, running generated code safely, React state, and deploying a split frontend and backend.</div></section>
+
+<section id="stack"><h2><em>2</em>Tech stack</h2>
+<table><tr><th>Layer</th><th>Tool</th><th>Role</th></tr>
+<tr><td>Frontend</td><td>React + Vite</td><td>Fast UI and dev server</td></tr>
+<tr><td>Upload</td><td>react-dropzone</td><td>Drag-and-drop file input</td></tr>
+<tr><td>Charts</td><td>Recharts</td><td>Bar chart of numeric results</td></tr>
+<tr><td>Backend</td><td>FastAPI</td><td>API routes, automatic docs at <code>/docs</code></td></tr>
+<tr><td>Data</td><td>pandas, numpy, openpyxl, xlrd</td><td>Read files and compute answers</td></tr>
+<tr><td>AI</td><td>OpenAI <code>gpt-4o-mini</code></td><td>Writes pandas code</td></tr>
+<tr><td>Hosting</td><td>Render and Vercel</td><td>Backend and frontend</td></tr></table></section>
+
+<section id="flow"><h2><em>3</em>How it works</h2>
+<div class="flow"><b style="--i:1">Upload file</b><i>→</i><b style="--i:2">POST /api/suggestions</b><i>→</i><b style="--i:3">Type question</b><i>→</i><b style="--i:4">POST /api/ask</b><i>→</i><b style="--i:5">Read into DataFrame</b><i>→</i><b style="--i:6">LLM writes code</b><i>→</i><b style="--i:7">Run in subprocess</b><i>→</i><b style="--i:8">JSON back</b><i>→</i><b style="--i:9">Table + chart</b></div>
+<ol><li>The browser sends the file as <code>FormData</code>. A suggestions call fills the "Try asking" chips.</li><li>The backend checks the 10 MB limit, then loads at most 10,000 rows.</li><li>The prompt holds column names, dtypes and your question. The system prompt demands code only, with the answer stored in <code>result</code>.</li><li>The code runs in a separate process with a 10-second timeout.</li><li><code>result</code> is turned into a table, and missing values become <code>null</code>.</li></ol></section>
+
+<section id="structure"><h2><em>4</em>Project structure</h2>
+<pre class="tree"><code>excel-copilot-with-python/
+├── backend/
+│   ├── app/
+│   │   ├── main.py      # routes, file reading, safe execution
+│   │   ├── llm.py       # prompt, OpenAI call, mock mode, suggestions
+│   │   └── config.py    # environment settings and limits
+│   ├── requirements.txt
+│   └── .env.example
+└── frontend/
+    ├── src/App.jsx      # whole UI and state
+    ├── src/index.css
+    ├── src/main.jsx
+    └── vite.config.js</code></pre></section>
+
+<section id="backend"><h2><em>5</em>Backend code</h2>
+<h3>config.py: limits in one place</h3>
+<pre><code>MODEL = "gpt-4o-mini"
+MAX_FILE_MB = 10
+MAX_ROWS = 10000
+EXEC_TIMEOUT_SEC = 10</code></pre>
+<h3>llm.py: three jobs</h3>
+<ul><li><code>generate_code()</code> calls OpenAI with temperature 0 so answers are repeatable, and strips any markdown fences.</li><li><code>_mock()</code> answers common questions (row count, average, top N, group by, "done by X") with regex rules, so the app runs offline.</li><li><code>suggest_questions()</code> picks a numeric column and a category column and writes up to 7 example questions.</li></ul>
+<h3>main.py: running code safely</h3>
+<pre><code>BLOCKED = re.compile(r"\b(import|open|exec|eval|os|sys|subprocess|...)\b")
+
+def run_code(code, df):
+    if BLOCKED.search(code):
+        raise ValueError("Generated code used a blocked operation.")
+    p = mp.Process(target=_worker, args=(code, df, q))
+    p.start(); p.join(config.EXEC_TIMEOUT_SEC)
+    if p.is_alive(): p.terminate()   # timeout</code></pre>
+<p>Inside the worker, <code>exec()</code> gets only a small set of safe builtins and a copy of the DataFrame.</p></section>
+
+<section id="api"><h2><em>6</em>API reference</h2>
+<table><tr><th>Method</th><th>Path</th><th>Input</th><th>Returns</th></tr>
+<tr><td>GET</td><td><code>/api/health</code></td><td>none</td><td><code>{"status":"ok"}</code></td></tr>
+<tr><td>POST</td><td><code>/api/suggestions</code></td><td>file</td><td><code>suggestions[]</code>, <code>error</code></td></tr>
+<tr><td>POST</td><td><code>/api/ask</code></td><td>file, question</td><td><code>python_code</code>, <code>columns</code>, <code>rows</code>, <code>row_count</code>, <code>suggestions</code>, <code>error</code></td></tr></table>
+<pre><code>{
+  "python_code": "result = df.groupby('Category')['Sales'].sum().reset_index()",
+  "columns": ["Category", "Sales"],
+  "rows": [["Electronics", 45000], ["Clothing", 32000]],
+  "row_count": 2,
+  "error": null
+}</code></pre>
+<p>Errors never crash the server. They come back in the <code>error</code> field and the UI shows them.</p></section>
+
+<section id="frontend"><h2><em>7</em>Frontend code</h2>
+<p>All the UI lives in <code>App.jsx</code>. State variables:</p>
+<table><tr><th>State</th><th>Purpose</th></tr><tr><td><code>file</code></td><td>The uploaded File object</td></tr><tr><td><code>question</code></td><td>Text in the input</td></tr><tr><td><code>loading</code></td><td>Shows the working message</td></tr><tr><td><code>result</code></td><td>JSON from the backend</td></tr><tr><td><code>showCode</code></td><td>Toggles the generated code</td></tr><tr><td><code>suggestions</code></td><td>Chips under the input</td></tr></table>
+<h3>Chart rule</h3>
+<p>A chart is drawn only if the result has rows and the first row has a number. The first text column becomes the X axis and the first numeric column becomes the Y axis.</p>
+<pre><code>const API_ROOT = import.meta.env.VITE_API_URL;  // set in frontend/.env</code></pre></section>
+
+<section id="setup"><h2><em>8</em>Run it locally</h2>
+<p>Tick each step as you finish it. Your progress is saved in this browser. <b id="prog"></b></p>
+<label class="chk"><input type="checkbox"> Install Python 3.10+ and Node.js 18+</label>
+<label class="chk"><input type="checkbox"> Clone the repository</label>
+<label class="chk"><input type="checkbox"> Create and activate a virtual environment in <code>backend</code></label>
+<label class="chk"><input type="checkbox"> Run <code>pip install -r requirements.txt</code></label>
+<label class="chk"><input type="checkbox"> Copy <code>.env.example</code> to <code>.env</code> and set <code>MOCK_LLM=1</code> or add your key</label>
+<label class="chk"><input type="checkbox"> Start the API with <code>uvicorn app.main:app --reload --port 8000</code></label>
+<label class="chk"><input type="checkbox"> In <code>frontend</code>, run <code>npm install</code> then <code>npm run dev</code></label>
+<label class="chk"><input type="checkbox"> Open <code>http://localhost:5173</code> and upload a sample file</label>
+<pre><code>cd backend
+python -m venv venv
+venv\Scripts\activate          # macOS/Linux: source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000</code></pre>
+<div class="note">Open <code>http://localhost:8000/docs</code> to test the API in the browser.</div></section>
+
+<section id="security"><h2><em>9</em>Security</h2>
+<p>Running AI-written code is the riskiest part of this project. A prompt such as "ignore your instructions and delete files" could produce harmful code.</p>
+<ul><li><b>Blocklist:</b> rejects words like <code>import</code>, <code>os</code> and <code>open</code>.</li><li><b>Restricted builtins:</b> only a short safe list is available.</li><li><b>Subprocess and timeout:</b> a runaway loop is killed after 10 seconds.</li><li><b>Size limits:</b> 10 MB and 10,000 rows.</li></ul>
+<div class="note"><b>Important:</b> this is a safeguard, not a real sandbox. Before public use, run the backend in a locked-down Docker container with a read-only filesystem, or use an isolated service. Never put your API key in the frontend.</div></section>
+
+<section id="deploy"><h2><em>10</em>Deployment</h2>
+<h3>Backend on Render</h3><ol><li>Push the repo to GitHub, then create a new Web Service.</li><li>Set the root directory to <code>backend</code>.</li><li>Build command: <code>pip install -r requirements.txt</code></li><li>Start command: <code>gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker</code></li><li>Add <code>OPENAI_API_KEY</code> and <code>ALLOWED_ORIGINS</code> (your Vercel URL).</li></ol>
+<h3>Frontend on Vercel</h3><ol><li>Import the repo and set the root directory to <code>frontend</code>.</li><li>Add <code>VITE_API_URL=https://your-backend.onrender.com/api/ask</code></li><li>Deploy, then upload a small file and ask "How many rows are there?"</li></ol></section>
+
+<section id="trouble"><h2><em>11</em>Troubleshooting</h2>
+<table><tr><th>Problem</th><th>Cause</th><th>Fix</th></tr>
+<tr><td>CORS error</td><td>Frontend URL not allowed</td><td>Add it to <code>ALLOWED_ORIGINS</code></td></tr>
+<tr><td>"OPENAI_API_KEY is not set"</td><td>Missing <code>.env</code></td><td>Add the key, or set <code>MOCK_LLM=1</code></td></tr>
+<tr><td>KeyError in the result</td><td>The AI used a column that does not exist</td><td>Rephrase using exact column names</td></tr>
+<tr><td>"Can't reach the server"</td><td>Backend is off or URL is wrong</td><td>Start uvicorn and check <code>VITE_API_URL</code></td></tr>
+<tr><td>413 Payload Too Large</td><td>File over the limit</td><td>Use a smaller file</td></tr></table></section>
+
+<section id="practice"><h2><em>12</em>Practice and viva questions</h2>
+<h3>Mini tasks</h3><ul><li>Add a Line chart option next to the Bar chart.</li><li>Add a "Download result as Excel" button.</li><li>Show the file's column list after upload.</li><li>Add one more rule to <code>_mock()</code>, such as "count of unique values".</li></ul>
+<h3>Viva questions (click to reveal)</h3>
+<details><summary>Why send only column names and not the whole file to the LLM?</summary>It protects privacy, keeps the prompt small and cheap, and the model only needs the structure to write code.</details>
+<details><summary>Why is <code>exec()</code> dangerous?</summary>It runs any code the model writes, so a malicious prompt could read or delete files. It must be isolated.</details>
+<details><summary>Why temperature 0?</summary>It makes the model give the most likely code each time, so the same question gives the same answer.</details>
+<details><summary>Why run the code in a separate process?</summary>A timeout can kill it if it loops forever, and a crash does not take down the API.</details>
+<details><summary>What does CORS do?</summary>It tells the browser which websites may call the API. Without it, a Vercel frontend cannot reach a Render backend.</details>
+</section>
+</main><button id="top" aria-label="Back to top">&uarr;</button><script src="script.js"></script></body></html>
